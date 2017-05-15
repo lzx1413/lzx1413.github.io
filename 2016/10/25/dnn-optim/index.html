@@ -1,0 +1,902 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="DNN," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="梯度下降变型算法批量梯度下降算法本文翻译自http://sebastianruder.com/optimizing-gradient-descent/index.html#batchgradientdescent普通的梯度下降算法，又称为批量梯度下降算法，会计算整个训练集的数据来得到目标函数的梯度： $ \theta = \theta-\eta\cdot\bigtriangledown_{\the">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深度学习中的梯度下降优化算法">
+<meta property="og:url" content="http://yoursite.com/2016/10/25/dnn-optim/index.html">
+<meta property="og:site_name" content="lzx1413's blog">
+<meta property="og:description" content="梯度下降变型算法批量梯度下降算法本文翻译自http://sebastianruder.com/optimizing-gradient-descent/index.html#batchgradientdescent普通的梯度下降算法，又称为批量梯度下降算法，会计算整个训练集的数据来得到目标函数的梯度： $ \theta = \theta-\eta\cdot\bigtriangledown_{\the">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2016/09/sgd_fluctuation.png">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2015/12/without_momentum.gif">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2015/12/with_momentum.gif">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2016/09/nesterov_update_vector.png">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2016/09/contours_evaluation_optimizers.gif">
+<meta property="og:image" content="http://sebastianruder.com/content/images/2016/09/saddle_point_evaluation_optimizers.gif">
+<meta property="og:updated_time" content="2016-11-02T03:11:24.045Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深度学习中的梯度下降优化算法">
+<meta name="twitter:description" content="梯度下降变型算法批量梯度下降算法本文翻译自http://sebastianruder.com/optimizing-gradient-descent/index.html#batchgradientdescent普通的梯度下降算法，又称为批量梯度下降算法，会计算整个训练集的数据来得到目标函数的梯度： $ \theta = \theta-\eta\cdot\bigtriangledown_{\the">
+<meta name="twitter:image" content="http://sebastianruder.com/content/images/2016/09/sgd_fluctuation.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/10/25/dnn-optim/"/>
+
+
+
+
+
+  <title> 深度学习中的梯度下降优化算法 | lzx1413's blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">lzx1413's blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <h1 class="site-subtitle" itemprop="description"></h1>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/25/dnn-optim/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="lzx1413">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="lzx1413's blog">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="lzx1413's blog" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                深度学习中的梯度下降优化算法
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-10-25T13:54:40+08:00">
+                2016-10-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/10/25/dnn-optim/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/10/25/dnn-optim/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/10/25/dnn-optim/" class="leancloud_visitors" data-flag-title="深度学习中的梯度下降优化算法">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="梯度下降变型算法"><a href="#梯度下降变型算法" class="headerlink" title="梯度下降变型算法"></a>梯度下降变型算法</h2><h3 id="批量梯度下降算法"><a href="#批量梯度下降算法" class="headerlink" title="批量梯度下降算法"></a>批量梯度下降算法</h3><p>本文翻译自<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#batchgradientdescent" target="_blank" rel="external">http://sebastianruder.com/optimizing-gradient-descent/index.html#batchgradientdescent</a><br>普通的梯度下降算法，又称为批量梯度下降算法，会计算整个训练集的数据来得到目标函数的梯度：<br> $ \theta = \theta-\eta\cdot\bigtriangledown_{\theta}J(\theta)<br> $<br>因为我们需要计算整个训练集来进行一次参数更新，这种算法会非常缓慢，而且可能无法满足内存的需求，也不能允许我们进行在线学习。<br><a id="more"></a><br>伪代码可表示如下<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> <span class="keyword">in</span> range(nb_epochs):</div><div class="line">trueparams_grad = evaluate_gradient(loss_function,data,params)</div><div class="line">    params = params - learning_rate * params_grad</div></pre></td></tr></table></figure></p>
+<p>一些开源框架实现了自动求导功能，如果是手动计算梯度，最好进行梯度检查,例如<a href="http://cs231n.github.io/neural-networks-3/" target="_blank" rel="external">here</a></p>
+<h3 id="随机梯度下降-SGD"><a href="#随机梯度下降-SGD" class="headerlink" title="随机梯度下降(SGD)"></a>随机梯度下降(SGD)</h3><p>SGD 使用每个训练数据进行参数的更新。<br>$\theta = \theta-\eta\cdot\bigtriangledown_{\theta}J(\theta;x^{i};y^{i})$<br>这种方式每进行一次计算更新一次参数，可以加快更新速度和进行在线学习<br>但这种算法随机性太强容易导致代价函数震荡问题,但同时也有利于跳出具有最优值，找到全局最优。<br><img src="http://sebastianruder.com/content/images/2016/09/sgd_fluctuation.png" alt=""><br>小批量梯度下降综合两种方法，每次使用包含n个训练数据的数据包进行计算和梯度更新</p>
+<script type="math/tex; mode=display">\theta = \theta-\eta\cdot\bigtriangledown_{\theta}J(\theta;x^{i:i+n};y^{i:i+n})</script><p>伪代码如下<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> range(nb_epochs):</div><div class="line">truenp.random.shuffle(data)</div><div class="line">    <span class="keyword">for</span> batch <span class="keyword">in</span> get_batches(data,batch_size = bs):</div><div class="line">    	params_grad = evaluate_gradient(loss_function,batch,params)</div><div class="line">        params = params -learning_rate*params_grad</div></pre></td></tr></table></figure></p>
+<p>但是这种方法也需要注意一下问题：</p>
+<ul>
+<li>选择一个合适的学习率是比较困难的，过小的学习率会使得收敛过于缓慢，过大的学习率可能会导致震荡以致无法收敛</li>
+<li>采用学习率预置表[11]希望可以通过一个预先设置的学习率的表来随着训练减小学习率，但是这样不能根据具体的数据库改变学习策略[10].</li>
+<li>所有的参数同时使用相同的学习率进行迭代也是一个问题，如果我们的数据是稀疏的而且我们的特征拥有不同的频率，那么我们不希望同时更新他们，对于那些很少出现的特征，我们希望能够有比较大的更新。</li>
+<li>另外就是求解复杂非凸目标函数可能陷于局部最优解的问题[19]探讨了优化过程中遇到鞍点的问题，而且鞍点周围经常是平原，梯度在各个方向上都是0.</li>
+</ul>
+<h2 id="梯度下降优化算法"><a href="#梯度下降优化算法" class="headerlink" title="梯度下降优化算法"></a>梯度下降优化算法</h2><p>下面我们将介绍一些常用的深度学习梯度下降优化算法，我们不会介绍那些对于高维数据训练不适用的算法，例如<a href="https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization" target="_blank" rel="external">Newton’s method</a></p>
+<h3 id="Momentum"><a href="#Momentum" class="headerlink" title="Momentum"></a>Momentum</h3><p>SGD算法在狭窄的山谷中的下降引导方向上不是很好，这些地方一个方向上的梯度远远大于另外一个方向[1],在这种情况下，SGD算法会表现出一种摇摆不定的优化路线，如下图所示：<br><img src="http://sebastianruder.com/content/images/2015/12/without_momentum.gif" alt=""><br>Momentum[2]是一种在可以加速SGD，抑制方向摆动的算法，如下图所示，算法通过加入一个因子$\gamma$</p>
+<script type="math/tex; mode=display">v_t=\gamma v_{t-1}+\eta\bigtriangledown_{\theta}J(\theta)</script><script type="math/tex; mode=display">\theta=\theta-v_t</script><p>在实际中，$\gamma$通常为0.9或者相近的数值</p>
+<p> <img src="http://sebastianruder.com/content/images/2015/12/with_momentum.gif" alt=""><br>本质上来说，使用这种算法，就好像我们在山顶推下一个球，这个球在下降过程中不断加速，我们的参数更新和这种方式类似，动量因素随着指向相似方向的梯度的增加还增大，这样我们就可以更快的收敛。</p>
+<h3 id="Nesterov-accelerated-gradient"><a href="#Nesterov-accelerated-gradient" class="headerlink" title="Nesterov accelerated gradient"></a>Nesterov accelerated gradient</h3><p>但是，一个球从山上滚下来，盲目的随着倾斜的方向是不满足要求的，我们希望拥有一个智能化的球，它知道目标在哪从而在到达底部之前进行减速。<br>NAG[7]便是给我们的动量法预见能力的算法，我们知道我们会使用动量(momentum)参数<script type="math/tex">\gamma v_{t-1}</script> 去更新参数 <script type="math/tex">\theta</script>,计算<script type="math/tex">\theta-\gamma v_{t-1}</script> 可以给我们下一个参数 $\theta$ 的大致位置，我们现在可以高效地通过计算下一刻的参数进行预测而不是根据目前的参数</p>
+<script type="math/tex; mode=display">v_t=\gamma v_{t-1}+\eta\bigtriangledown_{\theta}J(\theta-\gamma   v_{t-1})</script><script type="math/tex; mode=display">\theta=\theta-v_t</script><p>$\gamma$ 大致设置为0.9，当Momentum第一次计算出当前的梯度，下面短的蓝色的向量，然后向着更新的梯度方向迈一大步，图中长的蓝色的向量，NAG 首先向着变化方向迈出一大步，褐色的向量，测量梯度然后做出修正（绿色的向量），这种前向更新策略避免了前进过快掠过最优值，这种方式在RNNS的一些任务[8]中可能会因此偏差非常大。<br><img src="http://sebastianruder.com/content/images/2016/09/nesterov_update_vector.png" alt=""></p>
+<h3 id="Adagrad"><a href="#Adagrad" class="headerlink" title="Adagrad"></a>Adagrad</h3><p>Adagrad[3]的原理是，根据参数调整学习率，对不经常更新的参数进行大的更新，对经常更新的参数进行小的更新，由于这个原因，这种方式对于稀疏数据十分合适。Dean等人[4]发现Adagrad算法很好地提高了SGD的鲁棒性，而且使用这种方法在谷歌进行大数据训练，另外，Pennington等人[5]使用Adagrad去训练GloVe word embeddings，因为不常用的词需要更大的更新步伐。<br>之前我们因为所有的参数<script type="math/tex">\theta</script>均使用一个学习率<script type="math/tex">\eta</script>，所以会同时对所有参数<script type="math/tex">\theta_i</script>在时间点$t$进行更新，因为Adagrad对每个参数分别设置学习率，我们首先<br>讲解Adagrad每个参数的更新，然后我们会向量化计算。简单的说，我们设置<script type="math/tex">g_{t,i}</script>表示参数<script type="math/tex">\theta_i</script>在步骤的梯度</p>
+<script type="math/tex; mode=display">g_{t,i} = \bigtriangledown_\theta J(\theta_i)</script><script type="math/tex; mode=display">\theta_{t+1,i} = \theta_{t,i}-\eta \cdot g_{t,i}</script><p>在更新规则上，Adagrad修改了学习率$\eta$,每个参数，每次更新</p>
+<script type="math/tex; mode=display">\theta_{t+1,i} = \theta_{t,i}- \frac{\eta}{\sqrt{G_{t,ii}+\epsilon}}\cdot g_{t,i}</script><script type="math/tex; mode=display">G_t\in \mathbb{R^{dxd}}</script><p>是一个对角矩阵，矩阵中对角线元素$i,i$是梯度$\theta_i$在t阶段的平方和，$\epsilon$是一个平滑项参数防止除数为0的情况，有趣的是，如果没有这个平方和开根号，这个算法就表现得差多了。<br>因为$G_t$包含的对角元素包含所有参数的平方和，我们可以使用元素级别的矩阵乘法来进行向量化计算</p>
+<script type="math/tex; mode=display">\theta_{t+1} = \theta_{t}- \frac{\eta}{\sqrt{G_{t}+\epsilon}}\odot g_{t}</script><p>Adagrad算法的一个好处就是可以消除人工及逆行学习率调节的需要，大多数实现采用默认为0.01然后就不管了。<br>Adagrad算法的缺点主要是累计的梯度的平方是分母，因为每次加入的梯度都是正数，所以一直在累加，在训练过程中，这会造成学习率越来越小直至消失，这样就无法通过训练继续学习了，下面的算法就是用来解决这个问题的。</p>
+<h3 id="Adadelta"><a href="#Adadelta" class="headerlink" title="Adadelta"></a>Adadelta</h3><p>Adadelta[6]是Adagrad算法的一个扩展，这个算法没有计算过去的所有的梯度，而是使用一个大小为$w$的窗口来进行约束。</p>
+<script type="math/tex; mode=display">E[g^2]_t = \gamma E[g^2]_{t-1}+(1-\gamma)g_t^2</script><p>是移动平均值<br>我们将$\gamma$设置为和momentum参数相类似的数，大概为0.9，为了清楚表达，我们现在重写SGD更新</p>
+<script type="math/tex; mode=display">\bigtriangleup\theta_t=-\eta\cdot g_{t,i}</script><script type="math/tex; mode=display">\theta_{t+1} = \bigtriangleup \theta_t</script><script type="math/tex; mode=display">\bigtriangleup \theta_t = -\frac{\eta}{\sqrt{E[g^2]_t+\epsilon}}g_t</script><p>作者指出这样梯度就和参数的单位不一样了，梯度应该有和参数有相同的理论单位。为了实现这个目标，他们首先定义了另外一个只是衰减平均数，这次不是梯度的平方，而是参数的平方更新。</p>
+<script type="math/tex; mode=display">E[\bigtriangleup \theta^2]_t=\gamma E[\bigtriangleup \theta^2]_{t-1}+(1-\gamma)\bigtriangleup \theta_t^2</script><script type="math/tex; mode=display">RMS[\bigtriangleup \theta]_t=\sqrt{E[g^2]_t+\epsilon}</script><p>因为<script type="math/tex">RMS[\bigtriangleup \theta]_t</script>是未知的，我们通过之前的参数更行平方根来进行预测，用<script type="math/tex">RMS[\bigtriangleup \theta]_{t—1}</script>来代替<script type="math/tex">\eta</script>最终的更新公式为</p>
+<script type="math/tex; mode=display">\bigtriangleup \theta_t=\frac{RMS[\bigtriangleup \theta]_{t-1}}{RMS[g]_t}</script><script type="math/tex; mode=display">\theta_{t+1}=\theta_t+\bigtriangleup \theta_t</script><h3 id="Adam"><a href="#Adam" class="headerlink" title="Adam"></a>Adam</h3><p>Adaptive Moment Estimation(Adam)[15] 对每个参数动态计算学习率的另外一种算法。除了像Adam那样存储指数削减的过去梯度平方的平均值$v_t$Adam 也保存了指数衰减的类似于momentum的参数<script type="math/tex">m_t</script></p>
+<script type="math/tex; mode=display">m_t=\beta_1m_{t-1}+(1-\beta_1)g_t</script><script type="math/tex; mode=display">v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2</script><p>$m_t$和$v_t$分别对应梯度的一阶中心距和二阶中心距的估计，因为他们都用0进行初始化，Adam的作者发现他们偏向0发展，特别是是在初始化的几步，特别是在衰减系数很小的时候(<script type="math/tex">\beta_1 \beta_2</script>)<br>他们通过计算一阶和二阶偏差矫正来抵消这种效果。</p>
+<script type="math/tex; mode=display">\widehat{m}=\frac{m_t}{1-\beta_1^t}</script><script type="math/tex; mode=display">\widehat{v}=\frac{v_t}{1-\beta_2^t}</script><p>最终</p>
+<script type="math/tex; mode=display">\theta_{t+1}=\theta_t - \frac{\eta}{\sqrt{\widehat{v_t}+\epsilon}}\widehat{m}_t</script><p>作者对<script type="math/tex">\beta_1 \beta_2 \epsilon</script>的默认值分别为0.9 0.999和10e-8</p>
+<h2 id="算法可视化"><a href="#算法可视化" class="headerlink" title="算法可视化"></a>算法可视化</h2><p><img src="http://sebastianruder.com/content/images/2016/09/contours_evaluation_optimizers.gif" alt=""><br><img src="http://sebastianruder.com/content/images/2016/09/saddle_point_evaluation_optimizers.gif" alt=""><br>我们可以看到使用自适应参数的算法的性能比较好</p>
+<h2 id="如何选择合适的算法"><a href="#如何选择合适的算法" class="headerlink" title="如何选择合适的算法"></a>如何选择合适的算法</h2><p>所以我们改使用哪种算法呢，如果你的输入数据是系数的，那么选择一种自适应参数的算法可能回去的最好的效果，而且使用默认的参数也会得到很好的效果<br>总而言之，RMSprop,Adaelta和Adam是非常类似的算法，在类似的任务上结果也都不错，Kingma[15]等人表明Adam可能是最好的整体选择。</p>
+<p>有趣的是，最近很多文章使用的简单的SGD和学习率变化表。正如之前所说的，SGD经常能够找到一个最小值，但是花费的时间可能会比其他算法长，而且可能会无法很好地收敛，所以，如果你希望快速训练深层次网络，你可以选择自动学习率的算法。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>1.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:1" target="_blank" rel="external">Sutton, R. S. (1986). Two problems with backpropagation and other steepest-descent learning procedures for networks. Proc. 8th Annual Conf. Cognitive Science Society.</a><br>2.<a href="http://doi.org/10.1016/S0893-6080(98" target="_blank" rel="external">Qian, N. (1999). On the momentum term in gradient descent learning algorithms. Neural Networks : The Official Journal of the International Neural Network Society, 12(1), 145–151.</a>00116-6)<br>3.<a href="http://jmlr.org/papers/v12/duchi11a.html" target="_blank" rel="external">Duchi, J., Hazan, E., &amp; Singer, Y. (2011). Adaptive Subgradient Methods for Online Learning and Stochastic Optimization. Journal of Machine Learning Research, 12, 2121–2159</a><br>4.<a href="http://doi.org/10.1109/ICDAR.2011.95" target="_blank" rel="external">Dean, J., Corrado, G. S., Monga, R., Chen, K., Devin, M., Le, Q. V, … Ng, A. Y. (2012). Large Scale Distributed Deep Networks. NIPS 2012: Neural Information Processing Systems, 1–11.</a><br>5.<a href="http://doi.org/10.3115/v1/D14-1162" target="_blank" rel="external">Pennington, J., Socher, R., &amp; Manning, C. D. (2014). Glove: Global Vectors for Word Representation. Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, 1532–1543</a><br>6.<a href="http://arxiv.org/abs/1212.5701" target="_blank" rel="external">Zeiler, M. D. (2012). ADADELTA: An Adaptive Learning Rate Method</a><br>7.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:7" target="_blank" rel="external">Nesterov, Y. (1983). A method for unconstrained convex minimization problem with the rate of convergence o(1/k2). Doklady ANSSSR (translated as Soviet.Math.Docl.), vol. 269, pp. 543– 547.</a><br>8.<a href="http://arxiv.org/abs/1212.0901" target="_blank" rel="external">Bengio, Y., Boulanger-Lewandowski, N., &amp; Pascanu, R. (2012). Advances in Optimizing Recurrent Networks.</a><br>9.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:9" target="_blank" rel="external">Training Recurrent neural Networks. PhD Thesis</a><br>10.<a href="http://doi.org/10.1109/NNSP.1992.253713" target="_blank" rel="external">Darken, C., Chang, J., &amp; Moody, J. (1992). Learning rate schedules for faster stochastic gradient search. Neural Networks for Signal Processing II Proceedings of the 1992 IEEE Workshop, (September), 1–11. http://doi.org/10.1109/NNSP.1992.253713 </a><br>11.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:11" target="_blank" rel="external">H. Robinds and S. Monro, “A stochastic approximation method,” Annals of Mathematical Statistics, vol. 22, pp. 400–407, 1951</a><br>12.<a href="http://papers.nips.cc/paper/5242-delay-tolerant-algorithms-for-asynchronous-distributed-online-learning.pdf" target="_blank" rel="external">Mcmahan, H. B., &amp; Streeter, M. (2014). Delay-Tolerant Algorithms for Asynchronous Distributed Online Learning. Advances in Neural Information Processing Systems (Proceedings of NIPS), 1–9.</a><br>13.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:13" target="_blank" rel="external">Abadi, M., Agarwal, A., Barham, P., Brevdo, E., Chen, Z., Citro, C., … Zheng, X. (2015). TensorFlow : Large-Scale Machine Learning on Heterogeneous Distributed Systems</a><br>14.<a href="http://arxiv.org/abs/1412.6651" target="_blank" rel="external">Zhang, S., Choromanska, A., &amp; LeCun, Y. (2015). Deep learning with Elastic Averaging SGD. Neural Information Processing Systems Conference (NIPS 2015), 1–24.</a><br>15.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:15" target="_blank" rel="external">Kingma, D. P., &amp; Ba, J. L. (2015). Adam: a Method for Stochastic Optimization. International Conference on Learning Representations, 1–13</a><br>16.<a href="http://doi.org/10.1145/1553374.1553380" target="_blank" rel="external">Bengio, Y., Louradour, J., Collobert, R., &amp; Weston, J. (2009). Curriculum learning. Proceedings of the 26th Annual International Conference on Machine Learning, 41–48</a><br>17.<a href="http://arxiv.org/abs/1410.4615" target="_blank" rel="external">Zaremba, W., &amp; Sutskever, I. (2014). Learning to Execute, 1–25</a><br>18.<a href="http://sebastianruder.com/optimizing-gradient-descent/index.html#fnref:18" target="_blank" rel="external">Ioffe, S., &amp; Szegedy, C. (2015). Batch Normalization : Accelerating Deep Network Training by Reducing Internal Covariate Shift. arXiv Preprint </a><br>19.<a href="http://arxiv.org/abs/1406.2572" target="_blank" rel="external">Dauphin, Y., Pascanu, R., Gulcehre, C., Cho, K., Ganguli, S., &amp; Bengio, Y. (2014). Identifying and attacking the saddle point problem in high-dimensional non-convex optimization. arXiv, 1–14. Retrieved from http://arxiv.org/abs/1406.2572</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/DNN/" rel="tag"># DNN</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/10/01/generate-model-CNN/" rel="next" title="Perceptual Losses for Real-Time Style Transfer and Super-Resolution 文章解读">
+                <i class="fa fa-chevron-left"></i> Perceptual Losses for Real-Time Style Transfer and Super-Resolution 文章解读
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/11/15/DP-TSP/" rel="prev" title="动态规划算法求解旅行商问题">
+                动态规划算法求解旅行商问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/10/25/dnn-optim/"
+           data-title="深度学习中的梯度下降优化算法" data-url="http://yoursite.com/2016/10/25/dnn-optim/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.jpg"
+               alt="lzx1413" />
+          <p class="site-author-name" itemprop="name">lzx1413</p>
+          <p class="site-description motion-element" itemprop="description">talk is cheap</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lzx1413" target="_blank" title="github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  github
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/li-zuo-xin" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#梯度下降变型算法"><span class="nav-number">1.</span> <span class="nav-text">梯度下降变型算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#批量梯度下降算法"><span class="nav-number">1.1.</span> <span class="nav-text">批量梯度下降算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#随机梯度下降-SGD"><span class="nav-number">1.2.</span> <span class="nav-text">随机梯度下降(SGD)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#梯度下降优化算法"><span class="nav-number">2.</span> <span class="nav-text">梯度下降优化算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Momentum"><span class="nav-number">2.1.</span> <span class="nav-text">Momentum</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nesterov-accelerated-gradient"><span class="nav-number">2.2.</span> <span class="nav-text">Nesterov accelerated gradient</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Adagrad"><span class="nav-number">2.3.</span> <span class="nav-text">Adagrad</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Adadelta"><span class="nav-number">2.4.</span> <span class="nav-text">Adadelta</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Adam"><span class="nav-number">2.5.</span> <span class="nav-text">Adam</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法可视化"><span class="nav-number">3.</span> <span class="nav-text">算法可视化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何选择合适的算法"><span class="nav-number">4.</span> <span class="nav-text">如何选择合适的算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lzx1413</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"lzx1413"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("xlwb7668DiQTokGhthu6lmtS-MdYXbMMI", "zuSbl0GMwHLP3DVrEReMjBTc");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+
+</body>
+</html>

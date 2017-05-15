@@ -1,0 +1,953 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Caddy,server," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Caddy是一个轻量级的服务器容器，使用golang编写，使用十分方便，支持以下特性：
+
+HTTP/2
+Automatic HTTPS
+Easy Deployment
+Multi-core
+Markdown
+WebSockets
+IPv6
+Logging
+FastCGI
+Headers
+Reverse Proxy
+Rewrites &amp;amp; Redirects
+Clean URLs
+Gzip
+D">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Caddy使用教程【1】">
+<meta property="og:url" content="http://yoursite.com/2016/07/15/caddy-doc/index.html">
+<meta property="og:site_name" content="lzx1413's blog">
+<meta property="og:description" content="Caddy是一个轻量级的服务器容器，使用golang编写，使用十分方便，支持以下特性：
+
+HTTP/2
+Automatic HTTPS
+Easy Deployment
+Multi-core
+Markdown
+WebSockets
+IPv6
+Logging
+FastCGI
+Headers
+Reverse Proxy
+Rewrites &amp;amp; Redirects
+Clean URLs
+Gzip
+D">
+<meta property="og:updated_time" content="2016-07-15T08:34:27.276Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Caddy使用教程【1】">
+<meta name="twitter:description" content="Caddy是一个轻量级的服务器容器，使用golang编写，使用十分方便，支持以下特性：
+
+HTTP/2
+Automatic HTTPS
+Easy Deployment
+Multi-core
+Markdown
+WebSockets
+IPv6
+Logging
+FastCGI
+Headers
+Reverse Proxy
+Rewrites &amp;amp; Redirects
+Clean URLs
+Gzip
+D">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/07/15/caddy-doc/"/>
+
+
+
+
+
+  <title> Caddy使用教程【1】 | lzx1413's blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">lzx1413's blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+    
+      <h1 class="site-subtitle" itemprop="description"></h1>
+    
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/15/caddy-doc/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="lzx1413">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar.jpg">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="lzx1413's blog">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="lzx1413's blog" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+            
+            
+              
+                Caddy使用教程【1】
+              
+            
+          </h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-15T11:36:42+08:00">
+                2016-07-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2016/07/15/caddy-doc/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/15/caddy-doc/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/07/15/caddy-doc/" class="leancloud_visitors" data-flag-title="Caddy使用教程【1】">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数 </span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Caddy是一个轻量级的服务器容器，使用golang编写，使用十分方便，支持以下特性：</p>
+<ul>
+<li>HTTP/2</li>
+<li>Automatic HTTPS</li>
+<li>Easy Deployment</li>
+<li>Multi-core</li>
+<li>Markdown</li>
+<li>WebSockets</li>
+<li>IPv6</li>
+<li>Logging</li>
+<li>FastCGI</li>
+<li>Headers</li>
+<li>Reverse Proxy</li>
+<li>Rewrites &amp; Redirects</li>
+<li>Clean URLs</li>
+<li>Gzip</li>
+<li>Directory Browsing</li>
+<li>Virtual Hosts</li>
+</ul>
+<p>Caddy使用时仅运行一个可执行文件，并通过Caddyfile文件进行配置，下面将对其各个功能进行介绍。<br><a id="more"></a></p>
+<h2 id="The-Caddyfile"><a href="#The-Caddyfile" class="headerlink" title="The Caddyfile"></a>The Caddyfile</h2><p>Caddyfile是Caddy运行时的配置文件，若与caddy在同一目录下可以默认查找到，如果不在同一个目录下，可通过指令<br><code>caddy -conf=&quot;/path/to/Caddyfile&quot;</code>进行配置</p>
+<h2 id="basicauth"><a href="#basicauth" class="headerlink" title="basicauth"></a>basicauth</h2><p>basicauth实现了http的基本权限认证功能，这个功能可以使用账号和密码来保护文件或文件夹。需要注意的是这种方法在纯html中是不安全的，所以在使用时要慎重。<br>在Caddyfile中的指令是：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">basicauth path username password</div></pre></td></tr></table></figure></p>
+<ul>
+<li>path 需要保护的文件名或者文件夹的名字</li>
+<li>username 用户名</li>
+<li>password 密码<br>需要保护特定多文件或文件夹时使用如下指令:</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">basicauth username password&#123;</div><div class="line">trueresources</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<ul>
+<li>resources 每行一个文件或者文件夹</li>
+</ul>
+<h2 id="browse"><a href="#browse" class="headerlink" title="browse"></a>browse</h2><p>browse支持对特定文件路径下的文件进行文件浏览，指令如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">browse [path [tplfile]]</div></pre></td></tr></table></figure></p>
+<ul>
+<li>path 浏览的根路径</li>
+<li>tplfile 使用的模板文件，用于显示文件树<br>支持获取json格式的返回，示例如下：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -H &quot;Accept: application/json&quot; &apos;localhost:2015/?limit=1&apos;</div></pre></td></tr></table></figure>
+<h2 id="errors"><a href="#errors" class="headerlink" title="errors"></a>errors</h2><p>errors 允许自定义错误界面和制定log文件地址</p>
+<p><strong>Examples</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">errors ../error.log</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">errors &#123;</div><div class="line">truelog ../error.log</div><div class="line">true404 404.html # Not Found</div><div class="line">true500 500.html # Internal Server Error</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">errors &#123;</div><div class="line">truelog error.log &#123;</div><div class="line">truetruesize 50 # Rotate after 50 MB</div><div class="line">truetrueage  30 # Keep rotated files for 30 days</div><div class="line">truetruekeep 5  # Keep at most 5 log files</div><div class="line">true&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="internal"><a href="#internal" class="headerlink" title="internal"></a>internal</h2><p>internal 可以隔离特定文件夹，避免被外部访问到，访问的请求将会收到一个404 的返回。<br>但是允许特定的设置的代理访问这些资源，这种模式可以允许一个反向代理进行登陆，授权等操作。<br>指令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">internal path</div></pre></td></tr></table></figure></p>
+<ul>
+<li>path 是保护资源的根目录</li>
+</ul>
+<p><strong>Examples</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">internal /internal</div><div class="line">proxy /redirect http://localhost:9000</div></pre></td></tr></table></figure></p>
+<h2 id="ipfilter"><a href="#ipfilter" class="headerlink" title="ipfilter"></a>ipfilter</h2><p>用于通过客户ip来禁止或者允许访问。此功能基于国家代号，所以需要一份<a href="https://dev.maxmind.com/geoip/geoip2/geolite2/" target="_blank" rel="external"> MaxMind’s GeoLite2 Country database </a>的拷贝。<br>指令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">ipfilter paths... &#123;</div><div class="line">truerule       block | allow</div><div class="line">trueip         list or/and range of IPs...</div><div class="line">truecountry    countries ISO codes...</div><div class="line">truedatabase   db_path</div><div class="line">trueblockpage  block_page</div><div class="line">truestrict</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<ul>
+<li>paths… 是一系列空的根文件夹，需要进行ip判断,用空格隔开</li>
+<li>rule 白名单 黑名单模式</li>
+<li>ip… ip或者ip范围</li>
+<li>country… 国家IOS码 空格隔开</li>
+<li>db_path 地理ip数据库，只有当county使用时才需要</li>
+<li>block_page 被禁止ip访问返回页面</li>
+<li>strict 。。。一般不用</li>
+</ul>
+<p><strong>Examples</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">ipfilter / &#123;</div><div class="line">truerule allow</div><div class="line">trueip   93.168.247.245</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>只支持一个ip地址的访问<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">ipfilter / &#123;</div><div class="line">truerule       block</div><div class="line">trueip         212.10.15.0-255 213.10.15.0-10 5.23.4.24</div><div class="line">trueblockpage  /local/data/default.html</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>限制两个ip段的地址的访问和一个特定地址的访问，并且显示default.html<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ipfilter / &#123;</div><div class="line">truerule      allow</div><div class="line">truecountry   FR</div><div class="line">truedatabase  /local/data/GeoLite2-Country.mmdb </div><div class="line">trueip        99.23.4.24 201.22.3.12</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>仅允许两个来自法国的ip进行访问</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Caddy/" rel="tag"># Caddy</a>
+          
+            <a href="/tags/server/" rel="tag"># server</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/13/1-2-Linear-and-Quadratic-Discriminant-Analysis/" rel="next" title="1.2 Linear and Quadratic Discriminant Analysis">
+                <i class="fa fa-chevron-left"></i> 1.2 Linear and Quadratic Discriminant Analysis
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/05/1-4-Support-Vector-Machines/" rel="prev" title="1-4-Support-Vector-Machines">
+                1-4-Support-Vector-Machines <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/07/15/caddy-doc/"
+           data-title="Caddy使用教程【1】" data-url="http://yoursite.com/2016/07/15/caddy-doc/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.jpg"
+               alt="lzx1413" />
+          <p class="site-author-name" itemprop="name">lzx1413</p>
+          <p class="site-description motion-element" itemprop="description">talk is cheap</p>
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/lzx1413" target="_blank" title="github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  github
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/li-zuo-xin" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#The-Caddyfile"><span class="nav-number">1.</span> <span class="nav-text">The Caddyfile</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#basicauth"><span class="nav-number">2.</span> <span class="nav-text">basicauth</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#browse"><span class="nav-number">3.</span> <span class="nav-text">browse</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#errors"><span class="nav-number">4.</span> <span class="nav-text">errors</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#internal"><span class="nav-number">5.</span> <span class="nav-text">internal</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ipfilter"><span class="nav-number">6.</span> <span class="nav-text">ipfilter</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lzx1413</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"lzx1413"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    
+    <script src="/lib/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("xlwb7668DiQTokGhthu6lmtS-MdYXbMMI", "zuSbl0GMwHLP3DVrEReMjBTc");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+
+</body>
+</html>
